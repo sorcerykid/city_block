@@ -1,32 +1,48 @@
 City Block II Mod v2.0
 By Leslie E. Krause
 
-City Block II disables use of water and lava buckets within a designated area around spawn 
-and also sends aggressive players to a central jail. The mod was inspired by the original 
-"city_block", developed by lag01 for the just test server.
+City Block II disables use of water and lava buckets within a designated area and sends 
+aggressive players to a central jail. The mod was inspired by the original "city_block", 
+developed by lag01 for the just test server.
+
+The default behavior of the city block is to intercept placement of lava buckets, lava 
+nodes, water buckets, and water nodes according to the following validation logic (this 
+is for lava, but the conditions are the same for water):
+
+   1. If player has "server" privilege, then always allow placement of lava.
+   2. If player is below -250 meters, then always allow placement of lava.
+   3. Otherwise, check permissions of the most restrictive city block in range.
+   4. If lava buckets are permitted by city block and player has "lava" privilege, then 
+      allow placement of lava.
+   5. Otherwise deny placement of lava under any other conditions.
+
+There are also restrictions on TNT nodes (cannot be placed nor ignited above -500 meters) 
+and on Protection nodes (cannot be placed anywhere closer than 21 meters from the world 
+origin (0,0,0), which is usually spawn. This validation logic can be fully customized 
+according to your world needs simply by editing the "hooks.lua" and "config.lua" files.
 
 To craft a city block, you will need to arrange seven sandstone blocks in a square around 
-one mese block in the craft grid (this is a far less expensive recipe than the former mod, 
+one mese block in the craft grid (this is a less expensive recipe than the original mod, 
 which hopefully encourages players to co-operatively protect public spaces from griefing.
 
 The range of each city block is 21 meters in all four cardinal directions, extending
 infinitely upward, but downward only to -100 meters. Placing a city block at any depth
 below -100 will result in it being non-functional.
 
-As a convenience, you can punch the city block to activate the boundary display, which can 
+As a convenience, you can punch the city block to activate the boundary display which can 
 aid in more accurate placement.
 
-By right-clicking on a city block after placement, you can override the default protection 
-behavior and monitor the corresponding interception metrics.
+By right-clicking on a city block, you can override the default protection behavior and 
+monitor the corresponding interception metrics.
 
  o Disable Jail on PvP
  o Allow Water Buckets
  o Allow Lava Buckets
 
-Keep in mind, if you are installing this mod in a world that has existing city blocks from 
-the original "city_block" mod, they will continue to function as expected. However, the 
-interface to override the default protection behavior and to monitor the interception 
-metrics will be unavailable until youmanually dig and replace the city block.
+Keep in mind, if you install this mod in a world that has city blocks from the original
+"city_block" mod, then they will continue to function as expected. However, the interface 
+to override the default protection behavior and to monitor the interception metrics will 
+be unavailable until you manually dig and replace the city block.
 
 
 Repository
@@ -70,7 +86,8 @@ Installation
 
   1) Unzip the archive into the mods directory of your game.
   2) Rename the city_block-master directory to "registry".
-  3) Add "city_block" as a dependency to any mods using the API.
+  3) Create a file named "city_blocks.txt" in the world directory.
+  4) Set the permissions of the file to be writable by Minetest.
 
 Source Code License
 ----------------------------------------------------------
