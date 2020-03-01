@@ -84,7 +84,7 @@ function allow_place_lava( pos, player )
 	return true
 end
 
-if tnt ~= nil then
+if minetest.get_modpath( "tnt" ) then
 	-- only validate tnt nodes if mod is installed
 	minetest.override_item( "tnt:tnt", {
 		allow_place = allow_place_explosive,
@@ -92,7 +92,7 @@ if tnt ~= nil then
 	} )
 end
 
-if protector ~= nil then
+if minetest.get_modpath( "protector" ) then
 	-- only validate protector nodes if mod is installed
 	minetest.override_item( "protector:protect", {
 		allow_place = allow_place_protector

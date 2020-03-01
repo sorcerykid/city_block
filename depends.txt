@@ -1,5 +1,7 @@
 default
-tnt
 bucket
-launchpad
+protector?
+tnt?
+formspecs
+antigrief
 config
