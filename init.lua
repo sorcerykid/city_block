@@ -27,7 +27,7 @@ local function export_blocks( )
 	end
 
 	local file = io.open( world_path .. "/" .. config.filename, "w" )
-	if file then
+	if not file then
 		error( "Could not save city block data." )
 	end
 	file:write( data )
@@ -40,11 +40,11 @@ local function import_blocks( )
 		error( "Could not load city block data." )
 	end
 
-        local data = file:read( "*all" )
-        if data == "" then
-                block_list = { }   -- initialize if empty file
-        else
-		block_list = minetest.deserialize( file:read( "*all" ) )
+	local data = file:read( "*all" )
+	if data == "" then
+		block_list = { }   -- initialize if empty file
+	else
+		block_list = minetest.deserialize( data )
 		if type( block_list ) ~= "table" then
 			error( "Could not deserialize city block data." )
 		end
@@ -80,7 +80,7 @@ end
 --------------------
 
 city_block.is_near_spawn = function ( pos, off )
-	return math.abs( default.spawn_pos.x - pos.x ) <= off and math.abs( default.spawn_pos.z - pos.z ) <= off
+	return math.abs( config.spawn_pos.x - pos.x ) <= off and math.abs( config.spawn_pos.z - pos.z ) <= off
 end
 
 city_block.find_nearby_block = function ( pos, opt )
@@ -92,7 +92,7 @@ city_block.find_nearby_block = function ( pos, opt )
 			if not opt or not options[ opt ] then
 				return block
 			end
-	        end
+		end
 	end
 	return nil
 end
@@ -147,15 +147,15 @@ minetest.register_node( "city_block:cityblock", {
 		remove_block( pos )
 		export_blocks( )
 	end,
-	before_open = function ( pos, node, player )
-		return { block = get_block( pos ), pos = pos }
-	end,
 	on_punch = function ( pos, node, player, pointed_thing )
 		minetest.add_entity( pos, "city_block:bounds" )
 	end,
-	on_open = function ( meta, player )
+	before_open = function ( pos, node, player )
+		return { block = get_block( pos ), pos = pos }
+	end,
+	on_open = function ( state, player )
 		local player_name = player:get_player_name( )
-		local block = meta.block
+		local block = state.block
 
 		if not block or not block.options or not block.metrics then
 			minetest.chat_send_player( player_name, "This city block is outdated or defective and must be replaced." )
@@ -166,39 +166,43 @@ minetest.register_node( "city_block:cityblock", {
 
 		local options = block.options or { disable_jail = false, allow_lava = false, allow_water = false }
 		local metrics = block.metrics or { jail = 0, water = 0, lava = 0 }
-		local formspec = "size[7.5,4.5]"
-			.. default.gui_bg_img
-			.. default.gui_slots
-			.. "label[0.0,0.0;City Block Properties]"
-			.. "box[0.0,0.6;7.3,0.1;#111111]"
-			.. "box[0.0,3.6;7.3,0.1;#111111]"
-			.. "label[0.0,1.0;Punch stone to show range.]"
-			.. string.format( "checkbox[0.0,1.4;disable_jail;Disable Jail on PvP;%s]",
-				options.disable_jail and "true" or "false" )
-			.. string.format( "checkbox[0.0,1.9;allow_water;Allow Water Buckets;%s]",
-				options.allow_water and "true" or "false" )
-			.. string.format( "checkbox[0.0,2.4;allow_lava;Allow Lava Buckets;%s]",
-				options.allow_lava and "true" or "false" )
-			.. "box[3.8,0.8;3.5,2.6;#222222]"
-			.. "label[4.2,1.0;Interception Metrics]"
-			.. string.format( "label[4.2,1.6;Sent to Jail: %s]", minetest.colorize( "#AAAAAA", metrics.jail ) )
-			.. string.format( "label[4.2,2.1;Water Checks: %s]", minetest.colorize( "#AAAAAA", metrics.water ) )
-			.. string.format( "label[4.2,2.6;Lava Checks: %s]", minetest.colorize( "#AAAAAA", metrics.lava ) )
-			.. "button_exit[3.5,4.0;2.0,0.5;close;Close]"
+		local formspec = "size[7.5,4.5]" ..
+			default.gui_bg_img ..
+			default.gui_slots ..
 
-		meta.block = block
+			"label[0.0,0.0;City Block Properties]" ..
+			"box[0.0,0.6;7.3,0.1;#111111]" ..
+			"box[0.0,3.6;7.3,0.1;#111111]" ..
+			"label[0.0,1.0;Punch stone to show range.]" ..
+
+			string.format( "checkbox[0.0,1.4;disable_jail;Disable Jail on PvP;%s]",
+				options.disable_jail and "true" or "false" ) ..
+			string.format( "checkbox[0.0,1.9;allow_water;Allow Water Buckets;%s]",
+				options.allow_water and "true" or "false" ) ..
+			string.format( "checkbox[0.0,2.4;allow_lava;Allow Lava Buckets;%s]",
+				options.allow_lava and "true" or "false" ) ..
+
+			"box[3.8,0.8;3.5,2.6;#222222]" ..
+			"label[4.2,1.0;Interception Metrics]" ..
+			string.format( "label[4.2,1.6;Sent to Jail: %s]", minetest.colorize( "#AAAAAA", metrics.jail ) ) ..
+			string.format( "label[4.2,2.1;Water Checks: %s]", minetest.colorize( "#AAAAAA", metrics.water ) ) ..
+			string.format( "label[4.2,2.6;Lava Checks: %s]", minetest.colorize( "#AAAAAA", metrics.lava ) ) ..
+
+			"button_exit[3.5,4.0;2.0,0.5;close;Close]"
+
+		state.block = block
 
 		return formspec
 	end,
-	on_close = function ( meta, player, fields )
+	on_close = function ( state, player, fields )
 		if fields.quit then
 			export_blocks( )
 		elseif fields.disable_jail then
-			meta.block.options.disable_jail = fields.disable_jail == "true" and true or false
+			state.block.options.disable_jail = fields.disable_jail == "true" and true or false
 		elseif fields.allow_water then
-			meta.block.options.allow_water = fields.allow_water == "true" and true or false
+			state.block.options.allow_water = fields.allow_water == "true" and true or false
 		elseif fields.allow_lava then
-			meta.block.options.allow_lava = fields.allow_lava == "true" and true or false
+			state.block.options.allow_lava = fields.allow_lava == "true" and true or false
 		end
 	end,
 } )
@@ -253,12 +257,11 @@ minetest.register_on_punchplayer( function( player, hitter, time_from_last_punch
 	local player_name = player:get_player_name( )
 	local player_hp = player:get_hp( );
 
-	-- make esception if attack is in self-defense (hitter provoked by player)
+	-- make exception if attack is in self-defense (hitter provoked by player)
 	if attacks[ hitter_name ][ player_name ] or minetest.check_player_privs( hitter_name, "kill" ) then
 		return
 	end
 
-print( hitter_name, "hits", player_name )
 	local attack_timer = attacks[ player_name ][ hitter_name ]
 
 	if player_hp > 0 and player_hp - damage <= 0 then
@@ -281,8 +284,11 @@ print( hitter_name, "hits", player_name )
 		if attack_timer then
 			attack_timer.restart( )
 		else
-			attack_timer = minetest.after( config.attack_expiry, function ( )
-				attacks[ player_name ][ hitter_name ] = nil
+			attack_timer = minetest.after( config.attack_timeout, function ( )
+				-- abort if victim is no longer online
+				if attacks[ player_name ] then
+					attacks[ player_name ][ hitter_name ] = nil
+				end
 			end )
 			attacks[ player_name ][ hitter_name ] = attack_timer
 		end
@@ -320,6 +326,25 @@ minetest.register_entity( "city_block:bounds",{
 		end
 	end,
 } )
+
+------------------------
+-- Launchpad Callback --
+------------------------
+
+if launchpad then
+	launchpad.register_mod( "city_block", function( player )
+		local count = 0
+		local owner = player:get_player_name( )
+
+		for i, block in ipairs( block_list ) do
+			if block.owner == owner then
+				count = count + 1
+			end
+		end
+
+		return count .. " records found."
+	end )
+end
 
 --------------------------
 

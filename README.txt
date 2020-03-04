@@ -1,4 +1,4 @@
-City Block II Mod v2.0
+City Block II Mod v2.1
 By Leslie E. Krause
 
 City Block II disables use of water and lava buckets within a designated area and sends 
@@ -66,7 +66,10 @@ Dependencies
 Default Mod (required)
   https://github.com/minetest-game-mods/default
 
-TNT Mod (required)
+Protector Redo Mod (optional)
+  https://notabug.org/TenPlus1/protector
+
+TNT Mod (optional)
   https://github.com/minetest-game-mods/tnt
 
 Bucket Mod (required)
