@@ -1,5 +1,5 @@
 --------------------------------------------------------
--- Minetest :: City Block II Mod v2.0 (city_block)
+-- Minetest :: City Block II Mod (city_block)
 --
 -- See README.txt for licensing and other information.
 -- Copyright (c) 2017-2020, Leslie E. Krause
